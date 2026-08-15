@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>芋泥 · Personal Page</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* ========== 动态 rem 尺寸体系:1920设计稿,1rem = 100px,所以所有值 = 设计稿px / 100 ========== */
+    --u-cover:   4.6rem;    /* 封皮 = 460px (主视觉基准,带动画位移都以此为比例) */
+    --u-record:  4.278rem;  /* 唱片 427.8px = 封皮 * 0.93 */
+    --u-label:   1.8rem;    /* 中心标签 180px = 封皮 * 0.39 */
+    --u-info-w:  4.6rem;    /* 信息卡宽度 460px */
+    --u-stage-w: 10.4rem;   /* 舞台最大 1040px */
+    --u-top-w:   10.4rem;   /* 顶栏最大 1040px */
+    --u-title:   0.22rem;   /* 封皮标题 22px */
+    --u-name:    0.30rem;   /* 昵称 30px */
+    --u-tagline: 0.15rem;   /* 一句话 15px */
+    --u-chip:    0.13rem;   /* 标签/按钮 13px */
+    --u-brand:   0.13rem;   /* 顶栏品牌 13px */
+    --u-moon:    0.20rem;   /* 月相 20px */
+    --u-crescent:0.46rem;   /* 小新月 46px */
+    --u-stage-h: 7.2rem;    /* 舞台高 720px */
+    --u-padding: 0.28rem;   /* 页面内边距 28px */
+
+    --card: rgba(255, 255, 255, 0.85);
+    --ink: #2c3e50;
+    --ink-soft: #6b7a8a;
+    --primary: #8FB8E8;
+    --primary-ink: #4a7bb0;
+    --shadow: rgba(60, 50, 100, 0.18);
+    --tag-bg: rgba(234, 242, 251, 0.7);
+    --tag-border: #c5d9ef;
+  }
+  body.dark {
+    --card: rgba(42, 48, 68, 0.85);
+    --ink: #e7ecf3;
+    --ink-soft: #a3adc0;
+    --primary: #a8cbf0;
+    --primary-ink: #c4dcf4;
+    --shadow: rgba(0, 0, 0, 0.45);
+    --tag-bg: rgba(51, 58, 82, 0.7);
+    --tag-border: #4a5472;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: transparent;
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: var(--ink);
+    padding: var(--u-padding) calc(var(--u-padding) * 0.6) calc(var(--u-padding) * 1.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: color 0.5s ease;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ========= 动态海面背景层 ========= */
+  .ocean-bg {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* 日间:极简雾霾蓝渐变(模仿浅蓝图,不照搬原图) */
+  .ocean-day {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      #F0F7FD 0%,    /* 顶部极淡的雾白蓝 */
+      #DCEAF5 28%,   /* 浅雾霾蓝 */
+      #C9DDEE 55%,   /* 中浅蓝 */
+      #B6D0E4 82%,   /* 淡灰蓝 */
+      #A6C4DA 100%); /* 底部更实的雾霾蓝 */
+    opacity: 1;
+    transition: opacity 1.2s ease;
+  }
+  body.dark .ocean-day { opacity: 0; }
+
+  /* 日间微动态:横向极细的淡色条纹(模仿海面拉丝质感) + 波光闪烁 */
+  .ocean-day::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(180deg,
+        rgba(255,255,255,0) 0,
+        rgba(255,255,255,0) 0.04rem,
+        rgba(255,255,255,0.10) 0.04rem,
+        rgba(255,255,255,0.10) 0.06rem,
+        rgba(255,255,255,0) 0.06rem,
+        rgba(255,255,255,0) 0.10rem),
+      radial-gradient(circle at 25% 60%, rgba(255,255,255,0.45) 0%, transparent 3%),
+      radial-gradient(circle at 65% 70%, rgba(255,255,255,0.4) 0%, transparent 3%),
+      radial-gradient(circle at 45% 80%, rgba(255,255,255,0.4) 0%, transparent 3%),
+      radial-gradient(circle at 80% 55%, rgba(255,255,255,0.35) 0%, transparent 3%);
+    animation: wave-shimmer 3.5s ease-in-out infinite;
+  }
+  @keyframes wave-shimmer {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 0.65; }
+  }
+
+  /* 夜间:层叠深蓝渐变(模仿海面深蓝图,从上浅到下深) */
+  .ocean-night {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg,
+      #C7E3EB 0%,    /* 顶部淡青蓝(空气层) */
+      #9CC7D8 12%,   /* 浅青蓝 */
+      #6FA9C2 25%,   /* 中浅蓝 */
+      #4A8DB0 42%,   /* 中海蓝 */
+      #2E6E94 60%,   /* 中深蓝 */
+      #1E5880 78%,   /* 深蓝 */
+      #124366 100%); /* 底部深海蓝 */
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+  body.dark .ocean-night { opacity: 1; }
+
+  /* 夜间微动态:横向层叠条纹(海面涟漪)+ 顶部余晖柔光环 */
+  .ocean-night::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(180deg,
+        rgba(255,255,255,0) 0,
+        rgba(255,255,255,0) 0.03rem,
+        rgba(255,255,255,0.06) 0.03rem,
+        rgba(255,255,255,0.06) 0.05rem,
+        rgba(255,255,255,0) 0.05rem,
+        rgba(255,255,255,0) 0.09rem),
+      radial-gradient(ellipse at 50% 12%,
+        rgba(255, 230, 200, 0.18) 0%,
+        rgba(255, 200, 150, 0.10) 25%,
+        transparent 55%);
+    animation: sunset-pulse 5s ease-in-out infinite;
+  }
+  @keyframes sunset-pulse {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.9; }
+  }
+
+  /* 前景内容置顶 */
+  .top-bar, .hint, .stage, .reset {
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ========= 顶栏(Flexbox布局,宽度百分比+max-width rem) ========= */
+  .top-bar {
+    width: 100%;
+    max-width: var(--u-top-w);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin-bottom: calc(var(--u-padding) * 0.8);
+  }
+  .brand {
+    font-size: var(--u-brand);
+    letter-spacing: 0.03rem;
+    color: var(--primary-ink);
+    font-weight: 500;
+    flex: 1 1 auto;
+  }
+  .theme-btn {
+    border: 0.01rem solid var(--primary);
+    background: var(--card);
+    color: var(--primary-ink);
+    padding: 0.07rem 0.16rem;
+    border-radius: 0.20rem;
+    cursor: pointer;
+    font-size: 0.12rem;
+    letter-spacing: 0.01rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    backdrop-filter: blur(0.08rem);
+    -webkit-backdrop-filter: blur(0.08rem);
+    flex: 0 0 auto;
+  }
+  .theme-btn:hover { background: var(--primary); color: #fff; }
+
+  .hint {
+    font-size: 0.13rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.02rem;
+    margin-bottom: calc(var(--u-padding) * 0.5);
+  }
+
+  /* ========= 舞台(Flexbox居中,宽度100% + max-width rem,min-height rem) ========= */
+  .stage {
+    position: relative;
+    width: 100%;
+    max-width: var(--u-stage-w);
+    min-height: var(--u-stage-h);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+
+  /* ========= 封皮(正方形封面,纯CSS绘制) ========= */
+  .cover {
+    position: relative;
+    flex: 0 0 auto;
+    width: var(--u-cover);
+    height: var(--u-cover);
+    border-radius: 0.08rem;
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 0.28rem 0.64rem rgba(20, 40, 90, 0.28), inset 0 0 0 0.01rem rgba(255,255,255,0.18);
+    transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1), box-shadow 1.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    background:
+      radial-gradient(0.012rem 0.012rem at 12% 22%, rgba(255,255,255,0.85), transparent 60%),
+      radial-gradient(0.01rem 0.01rem at 25% 80%, rgba(255,255,255,0.7), transparent 60%),
+      radial-gradient(0.015rem 0.015rem at 38% 14%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(0.01rem 0.01rem at 55% 90%, rgba(255,255,255,0.8), transparent 60%),
+      radial-gradient(0.012rem 0.012rem at 72% 30%, rgba(255,255,255,0.7), transparent 60%),
+      radial-gradient(0.01rem 0.01rem at 88% 70%, rgba(255,255,255,0.55), transparent 60%),
+      radial-gradient(0.015rem 0.015rem at 18% 64%, rgba(255,255,255,0.65), transparent 60%),
+      radial-gradient(0.01rem 0.01rem at 82% 10%, rgba(255,255,255,0.75), transparent 60%),
+      radial-gradient(0.013rem 0.013rem at 65% 66%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(0.01rem 0.01rem at 44% 46%, rgba(255,255,255,0.55), transparent 60%),
+      linear-gradient(180deg, #2d54a0 0%, #1b3e83 60%, #173877 100%);
+    user-select: none;
+  }
+  /* 顶部全息镭射条:高度 = 封皮 * 0.03 */
+  .cover .holo {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: calc(var(--u-cover) * 0.03);
+    background: linear-gradient(90deg,
+      #ff6fa0 0%, #ffb37b 14%, #fff287 28%, #8ef0a8 42%, #8bd3ff 58%, #b19bff 72%, #ff8bd8 86%, #ff6fa0 100%);
+    opacity: 0.92;
+  }
+  .cover .holo::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(135deg,
+      rgba(255,255,255,0.22) 0 0.02rem, transparent 0.02rem 0.05rem);
+    mix-blend-mode: overlay;
+  }
+  /* 月相图标:top = 封皮 * 0.095, gap = 封皮 * 0.026 */
+  .moons {
+    position: absolute;
+    top: calc(var(--u-cover) * 0.095);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: calc(var(--u-cover) * 0.026);
+  }
+  .moon {
+    width: var(--u-moon);
+    height: var(--u-moon);
+    position: relative;
+    border-radius: 50%;
+  }
+  .moon::before {
+    content: ""; position: absolute; inset: 0;
+    border-radius: 50%;
+    background: #f3e9c9;
+  }
+  .moon::after {
+    content: ""; position: absolute; top: 0; height: 100%;
+    border-radius: 50%;
+    background: #254a90;
+  }
+  .m1::after { width: 100%; left: 0; }
+  .m1::before { background: #254a90; }
+  .m1 { box-shadow: inset 0 0 0 0.01rem rgba(255,255,255,0.12); }
+  .m2::after { width: 70%; left: 0; }
+  .m3::after { width: 50%; left: 0; }
+  .m4::after { width: 22%; left: 0; }
+  .m5::after { width: 0%; }
+  .m5::before { box-shadow: 0 0 0.1rem rgba(255,255,255,0.5); }
+  .m6::after { width: 22%; right: 0; left: auto; background: #254a90; }
+  .m7::after { width: 50%; right: 0; left: auto; background: #254a90; }
+  .m8::after { width: 70%; right: 0; left: auto; background: #254a90; }
+
+  .cover .corner-m {
+    position: absolute;
+    top: calc(var(--u-cover) * 0.07);
+    right: calc(var(--u-cover) * 0.048);
+    color: #f3e9c9;
+    font-size: 0.20rem;   /* 20px */
+    letter-spacing: 0.02rem;
+    opacity: 0.85;
+  }
+
+  /* 彩虹弧:相对封皮宽度做响应式 */
+  .rainbow-wrap {
+    position: absolute;
+    left: 50%; top: 48%;
+    transform: translateX(-50%);
+    width: calc(var(--u-cover) * 1.96);
+    height: calc(var(--u-cover) * 1.96);
+    pointer-events: none;
+  }
+  .rb {
+    position: absolute;
+    left: 50%; top: 50%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border-top-style: solid;
+    border-left: 0; border-right: 0; border-bottom: 0;
+  }
+  .rb-1 {
+    width: calc(var(--u-cover) * 1.565);
+    height: calc(var(--u-cover) * 1.565);
+    border-top-width: calc(var(--u-cover) * 0.022);
+    border-color: #ff5d7a; opacity: 0.9; filter: blur(0.01rem);
+  }
+  .rb-2 {
+    width: calc(var(--u-cover) * 1.526);
+    height: calc(var(--u-cover) * 1.526);
+    border-top-width: calc(var(--u-cover) * 0.022);
+    border-color: #ffb652; opacity: 0.9; filter: blur(0.01rem);
+  }
+  .rb-3 {
+    width: calc(var(--u-cover) * 1.487);
+    height: calc(var(--u-cover) * 1.487);
+    border-top-width: calc(var(--u-cover) * 0.022);
+    border-color: #ffe772; opacity: 0.95; filter: blur(0.01rem);
+  }
+  .rb-4 {
+    width: calc(var(--u-cover) * 1.448);
+    height: calc(var(--u-cover) * 1.448);
+    border-top-width: calc(var(--u-cover) * 0.022);
+    border-color: #6ef39d; opacity: 0.9; filter: blur(0.01rem);
+  }
+  .rb-5 {
+    width: calc(var(--u-cover) * 1.409);
+    height: calc(var(--u-cover) * 1.409);
+    border-top-width: calc(var(--u-cover) * 0.022);
+    border-color: #7fbdff; opacity: 0.9; filter: blur(0.01rem);
+  }
+  .rainbow-glow {
+    position: absolute;
+    left: 50%; top: 48%;
+    transform: translateX(-50%);
+    width: calc(var(--u-cover) * 1.65);
+    height: calc(var(--u-cover) * 1.65);
+    border-radius: 50%;
+    border-top: calc(var(--u-cover) * 0.087) solid;
+    border-left: 0; border-right: 0; border-bottom: 0;
+    border-image: linear-gradient(90deg, transparent, #ff6a7c, #ffc065, #fff080, #80f0a2, #8bc6ff, transparent) 1;
+    filter: blur(0.14rem);
+    opacity: 0.6;
+  }
+
+  .little-crescent {
+    position: absolute;
+    top: 60%; left: 50%;
+    transform: translateX(-50%);
+    width: var(--u-crescent);
+    height: var(--u-crescent);
+    border-radius: 50%;
+    background: #f3e9c9;
+    box-shadow: 0 0 0.12rem rgba(255,255,255,0.4);
+  }
+  .little-crescent::after {
+    content: "";
+    position: absolute;
+    top: calc(var(--u-crescent) * 0.085);
+    left: calc(var(--u-crescent) * 0.35);
+    width: calc(var(--u-crescent) * 0.95);
+    height: calc(var(--u-crescent) * 0.95);
+    border-radius: 50%;
+    background: #1a3b80;
+  }
+
+  .cover-title {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: calc(var(--u-cover) * 0.083);
+    text-align: center;
+    color: #f3e9c9;
+    font-size: var(--u-title);
+    letter-spacing: 0.06rem;
+    font-weight: 300;
+    text-shadow: 0 0.02rem 0.08rem rgba(0,0,0,0.35);
+    font-family: "Georgia", "Times New Roman", serif;
+  }
+  .cover-subtitle {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: calc(var(--u-cover) * 0.039);
+    text-align: center;
+    color: rgba(243,233,201,0.6);
+    font-size: 0.10rem;  /* 10px */
+    letter-spacing: 0.04rem;
+  }
+
+  .stage.open .cover {
+    transform: translateX(calc(var(--u-cover) * -0.652));
+    box-shadow: 0 0.34rem 0.76rem rgba(20, 40, 90, 0.34), inset 0 0 0 0.01rem rgba(255,255,255,0.18);
+  }
+
+  /* ========= 唱片容器:负责位移 ========= */
+  .record-wrap {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: var(--u-record);
+    height: var(--u-record);
+    margin: calc(var(--u-record) / -2) 0 0 calc(var(--u-record) / -2);
+    z-index: 5;
+    transition: transform 1.0s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .stage.slide-out .record-wrap {
+    transform: translateX(calc(var(--u-cover) * 1.13));
+    /* 保持 z-index 5(低于封皮 10),唱片从封皮套内移出 */
+  }
+  .stage.open .record-wrap {
+    transform: translateX(calc(var(--u-cover) * -0.652));
+    z-index: 20;
+    transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  /* ========= 唱片本体:只负责整体旋转 ========= */
+  .record {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background:
+      repeating-radial-gradient(circle at center,
+        transparent 0, transparent 0.03rem,
+        rgba(255,255,255,0.10) 0.03rem, rgba(255,255,255,0.10) 0.04rem),
+      radial-gradient(circle at 30% 28%,
+        rgba(255,255,255,0.55) 0%,
+        rgba(220, 236, 250, 0.95) 22%,
+        rgba(188, 212, 234, 0.95) 58%,
+        rgba(158, 188, 215, 0.98) 100%);
+    box-shadow:
+      inset 0 0 0.40rem rgba(255,255,255,0.4),
+      0 0.18rem 0.50rem rgba(60, 100, 150, 0.25);
+    animation: spin 6.5s linear infinite;
+    animation-play-state: paused;
+    outline: 0.02rem solid rgba(0,0,0,0.08);
+    outline-offset: -0.02rem;
+  }
+  .stage.open .record {
+    animation-play-state: running;
+  }
+
+  /* 唱片中心白色标签(只有 yuni) */
+  .record-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: var(--u-label);
+    height: var(--u-label);
+    margin: calc(var(--u-label) / -2) 0 0 calc(var(--u-label) / -2);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f4f6fa 82%, #dfe5ee 100%);
+    box-shadow:
+      inset 0 0 0 0.01rem rgba(60,80,110,0.12),
+      inset 0 0.02rem 0.06rem rgba(255,255,255,0.9),
+      0 0.02rem 0.06rem rgba(60,80,110,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .label-name {
+    font-size: 0.28rem;
+    letter-spacing: 0.03rem;
+    color: #3a5480;
+    font-weight: 600;
+    font-family: "Georgia", "Times New Roman", serif;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ========= 个人信息卡片(Flexbox纵向布局,宽度 rem) ========= */
+  .info-card {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%) translateX(calc(var(--u-cover) * 0.13));
+    width: var(--u-info-w);
+    max-width: 100%;
+    padding: calc(var(--u-cover) * 0.113) calc(var(--u-cover) * 0.096);
+    background: var(--card);
+    border-radius: 0.16rem;
+    box-shadow: 0 0.20rem 0.50rem var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.7s ease 0.6s, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s;
+    z-index: 1;
+    backdrop-filter: blur(0.10rem);
+    -webkit-backdrop-filter: blur(0.10rem);
+    border: 0.01rem solid rgba(255,255,255,0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+  }
+  .stage.open .info-card {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+    pointer-events: auto;
+  }
+  .info-card h1 {
+    font-size: var(--u-name);
+    color: var(--primary-ink);
+    letter-spacing: 0.04rem;
+    margin-bottom: calc(var(--u-cover) * 0.03);
+    font-weight: 600;
+  }
+  .info-card .tagline {
+    font-size: var(--u-tagline);
+    line-height: 1.8;
+    color: var(--ink-soft);
+    margin-bottom: calc(var(--u-cover) * 0.061);
+  }
+  .section-title {
+    font-size: 0.11rem;
+    letter-spacing: 0.03rem;
+    color: var(--primary);
+    text-transform: uppercase;
+    margin-bottom: calc(var(--u-cover) * 0.026);
+    font-weight: 600;
+  }
+  .interests { display: flex; flex-wrap: wrap; gap: calc(var(--u-cover) * 0.022); }
+  .chip {
+    display: inline-block;
+    padding: calc(var(--u-cover) * 0.017) calc(var(--u-cover) * 0.039);
+    border-radius: 0.20rem;
+    background: var(--tag-bg);
+    border: 0.01rem solid var(--tag-border);
+    color: var(--primary-ink);
+    font-size: var(--u-chip);
+    letter-spacing: 0.01rem;
+  }
+
+  .reset {
+    margin-top: calc(var(--u-cover) * 0.057);
+    background: var(--card);
+    border: 0.01rem solid var(--primary);
+    color: var(--primary-ink);
+    padding: calc(var(--u-cover) * 0.017) calc(var(--u-cover) * 0.048);
+    border-radius: 0.20rem;
+    cursor: pointer;
+    font-size: var(--u-chip);
+    letter-spacing: 0.01rem;
+    transition: all 0.25s;
+    font-family: inherit;
+    backdrop-filter: blur(0.08rem);
+    -webkit-backdrop-filter: blur(0.08rem);
+    flex: 0 0 auto;
+  }
+  .reset:hover { background: var(--primary); color: #fff; }
+
+  /* ========= 三档媒体查询:桌面 ≥1024px / 平板 768-1023px / 手机 <768px  (Flexbox 自适应) ========= */
+
+  /* 平板:宽度缩小,舞台高度略增加,但仍保持左右布局 */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    :root {
+      /* 平板:封皮略缩小至 420px / 100 = 4.2rem,整体同步缩小 */
+      --u-cover:   4.2rem;
+      --u-record:  3.906rem;
+      --u-label:   1.64rem;
+      --u-info-w:  4.2rem;
+      --u-stage-w: 9.6rem;
+      --u-top-w:   9.6rem;
+      --u-stage-h: 6.8rem;
+    }
+    .stage { min-height: calc(var(--u-stage-h) * 1.05); }
+  }
+
+  /* 手机:上下布局,封皮居中,唱片移至封皮正上方旋转,信息卡在下方;三者垂直堆叠互不遮挡 */
+  @media (max-width: 767px) {
+    body {
+      padding: calc(var(--u-padding) * 0.6) calc(var(--u-padding) * 0.4) calc(var(--u-padding) * 1.2);
+    }
+    :root {
+      /* 手机:封皮进一步缩小至 340px = 3.4rem,舞台增高给顶部唱片和底部名片留空间 */
+      --u-cover:   3.4rem;
+      --u-record:  3.162rem;
+      --u-label:   1.326rem;
+      --u-info-w:  100%;
+      --u-stage-w: 100%;
+      --u-top-w:   100%;
+      --u-stage-h: 9.6rem;
+    }
+    .stage { min-height: var(--u-stage-h); flex-direction: column; }
+
+    /* 手机:封皮只略微上移(0.2u),保持在舞台中部偏上,给下方名片留足空间 */
+    .stage.open .cover { transform: translate(0, calc(var(--u-cover) * -0.20)); }
+
+    /* 手机:阶段一唱片从封皮内部向上方移出(不再向下垂),不会碰到下方名片 */
+    .stage.slide-out .record-wrap { transform: translateX(0) translateY(calc(var(--u-cover) * -0.95)); }
+
+    /* 手机:阶段二唱片继续上移,停在封皮正上方 —— 唱片底部贴紧封皮顶部(约 -1.27u),
+       唱片整体完全落在封皮顶边之上,不再越过封皮下垂,也就不会遮挡名片 */
+    .stage.open .record-wrap { transform: translate(0, calc(var(--u-cover) * -1.27)); }
+
+    .info-card {
+      top: auto;
+      bottom: 0;
+      left: 50%;
+      right: auto;
+      transform: translate(-50%, calc(var(--u-cover) * 0.15));
+      width: calc(100% - 0.16rem);
+      max-width: 4.6rem;
+      padding: calc(var(--u-cover) * 0.08) calc(var(--u-cover) * 0.06);
+    }
+    .stage.open .info-card { transform: translate(-50%, 0); }
+  }
+
+  /* 桌面(≥1024px):保持默认左右布局,原变量值不变 */
+  @media (min-width: 1024px) {
+    /* 默认变量即桌面基准 1920 设计稿,无需覆写 */
+  }
+</style>
+</head>
+<body>
+  <!-- 动态海面背景层 -->
+  <div class="ocean-bg">
+    <div class="ocean-day"></div>
+    <div class="ocean-night"></div>
+  </div>
+
+  <div class="top-bar">
+    <div class="brand">YUNI · PERSONAL PAGE</div>
+    <button class="theme-btn" id="themeBtn">切换夜间模式</button>
+  </div>
+
+  <div class="hint" id="hint">点击封面 · 开启名片</div>
+
+  <div class="stage" id="stage">
+    <div class="info-card" id="infoCard">
+      <div class="section-title">NICKNAME</div>
+      <h1>芋 泥</h1>
+      <p class="tagline">在数字与文字间，寻找独一无二符号的旅行家</p>
+      <div class="section-title">INTERESTS</div>
+      <div class="interests">
+        <span class="chip">🎹 弹钢琴</span>
+        <span class="chip">🎤 唱歌</span>
+        <span class="chip">🌏 旅行</span>
+      </div>
+    </div>
+
+    <div class="record-wrap" id="recordWrap">
+      <div class="record" id="record">
+        <div class="record-label">
+          <div class="label-name">yuni</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover" id="cover">
+      <div class="holo"></div>
+      <div class="moons">
+        <div class="moon m1"></div>
+        <div class="moon m2"></div>
+        <div class="moon m3"></div>
+        <div class="moon m4"></div>
+        <div class="moon m5"></div>
+        <div class="moon m6"></div>
+        <div class="moon m7"></div>
+        <div class="moon m8"></div>
+      </div>
+      <div class="corner-m">M</div>
+      <div class="rainbow-glow"></div>
+      <div class="rainbow-wrap">
+        <div class="rb rb-1"></div>
+        <div class="rb rb-2"></div>
+        <div class="rb rb-3"></div>
+        <div class="rb rb-4"></div>
+        <div class="rb rb-5"></div>
+      </div>
+      <div class="little-crescent"></div>
+      <div class="cover-title">Personal Page</div>
+      <div class="cover-subtitle">MIDNIGHTS · YUNI EDITION</div>
+    </div>
+  </div>
+
+  <button class="reset" id="reset">重置动画</button>
+
+  <script>
+    // ========= 动态 rem 适配:基于1920设计稿,1rem=100px(1920屏时) + 含 resize 监听 + 上下限 =========
+    (function initRem() {
+      const DESIGN = 1920;       // 设计稿宽度
+      const REM_BASE = 100;     // 设计稿下 html font-size = 100px (换算:px/100 = rem)
+      const MIN_W = 320;        // 最小按320算,不缩更小
+      const MAX_W = 2560;       // 最大按2560算,不扩更大
+      const MIN_REM = 32;       // html 最小字号 32px(手机下限)
+      const MAX_REM = 140;      // html 最大字号 140px(大屏上限)
+      function setRem() {
+        const w = Math.max(MIN_W, Math.min(MAX_W, window.innerWidth || document.documentElement.clientWidth));
+        const rem = Math.max(MIN_REM, Math.min(MAX_REM, (w / DESIGN) * REM_BASE));
+        document.documentElement.style.fontSize = rem + 'px';
+      }
+      setRem();
+      window.addEventListener('resize', setRem);
+      window.addEventListener('pageshow', (e) => { if (e.persisted) setRem(); });
+    })();
+
+    const body = document.body;
+    const stage = document.getElementById('stage');
+    const cover = document.getElementById('cover');
+    const hint = document.getElementById('hint');
+    const themeBtn = document.getElementById('themeBtn');
+    const resetBtn = document.getElementById('reset');
+    let opened = false;
+
+    // 点击封皮 → 三阶段动画
+    cover.addEventListener('click', () => {
+      if (opened) return;
+      opened = true;
+      hint.textContent = '名片已展开 · 探索中';
+
+      // 阶段1:唱片从封皮中向右移出(不旋转)
+      stage.classList.add('slide-out');
+
+      // 阶段2:(1s后)封皮+唱片一起移到左侧,唱片叠在封皮上开始整体旋转,右侧信息卡出现
+      setTimeout(() => {
+        stage.classList.add('open');
+      }, 1000);
+    });
+
+    // 重置
+    resetBtn.addEventListener('click', () => {
+      stage.classList.remove('open');
+      setTimeout(() => {
+        stage.classList.remove('slide-out');
+      }, 900);
+      opened = false;
+      hint.textContent = '点击封面 · 开启名片';
+    });
+
+    // 日夜模式切换
+    let isDark = false;
+    themeBtn.addEventListener('click', () => {
+      isDark = !isDark;
+      body.classList.toggle('dark', isDark);
+      themeBtn.textContent = isDark ? '切换日间模式' : '切换夜间模式';
+    });
+  </script>
+</body>
+</html>
